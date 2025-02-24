@@ -25,26 +25,33 @@ namespace IrodalomProjekt
 
         private void BetoltesClick(object sender, RoutedEventArgs e)
         {
-            try
+            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (openFileDialog.ShowDialog() == true)
             {
-                kerdesek.Clear();
-                using (StreamReader sr = new StreamReader("RadnotiKerdesek.txt"))
+                try
                 {
-                    while (!sr.EndOfStream)
+                    kerdesek.Clear();
+                    using (StreamReader sr = new StreamReader(openFileDialog.FileName))
                     {
-                        string[] adatok = sr.ReadLine().Split(';');
-                        kerdesek.Add(new Kerdes(adatok[0], adatok[1], adatok[2], adatok[3], adatok[4]));
+                        while (!sr.EndOfStream)
+                        {
+                            string[] adatok = sr.ReadLine().Split(';');
+                            kerdesek.Add(new Kerdes(adatok[0], adatok[1], adatok[2], adatok[3], adatok[4]));
+                        }
                     }
+                    MessageBox.Show("Kérdések sikeresen betöltve!");
+                    aktualisKerdesIndex = 0;
+                    KerdesMegjelenit();
                 }
-                MessageBox.Show("Kérdések sikeresen betöltve!");
-                aktualisKerdesIndex = 0;
-                KerdesMegjelenit();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Hiba a fájl beolvasásakor: " + ex.Message);
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Hiba a fájl beolvasásakor: " + ex.Message);
+                }
             }
         }
+
+
 
         private void KerdesMegjelenit()
         {
@@ -54,8 +61,9 @@ namespace IrodalomProjekt
                 return;
             }
 
-            var kerdes = kerdesek[aktualisKerdesIndex];
+            Kerdes kerdes = kerdesek[aktualisKerdesIndex];
             tbkKerdeszSzoveg.Text = kerdes.KerdesSzoveg;
+
             ValaszA.Content = kerdes.ValaszA;
             ValaszB.Content = kerdes.ValaszB;
             ValaszC.Content = kerdes.ValaszC;
@@ -92,7 +100,23 @@ namespace IrodalomProjekt
         }
         private void KiertekelesClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Kiértékelés funkció még nincs implementálva.");
+            if (kerdesek.Count == 0)
+            {
+                MessageBox.Show("Nincsenek betöltött kérdések!");
+                return;
+            }
+
+            int helyesValaszokSzama = 0;
+
+            foreach (Kerdes kerdes in kerdesek)
+            {
+                if (kerdes.ValaszEllenorzes())
+                {
+                    helyesValaszokSzama++;
+                }
+            }
+
+            MessageBox.Show($"Helyes válaszok száma: {helyesValaszokSzama} / {kerdesek.Count}");
         }
 
         private void KilepesClick(object sender, RoutedEventArgs e)
@@ -102,8 +126,33 @@ namespace IrodalomProjekt
 
         private void MegerositesClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Megerősítés funkció még nincs implementálva.");
-        }
+            if (kerdesek.Count == 0)
+            {
+                MessageBox.Show("Nincsenek betöltött kérdések!");
+                return;
+            }
 
+            Kerdes kerdes = kerdesek[aktualisKerdesIndex];
+
+            if (ValaszA.IsChecked == true)
+            {
+                kerdes.UserValasz = kerdes.ValaszA;
+            }
+            else if (ValaszB.IsChecked == true)
+            {
+                kerdes.UserValasz = kerdes.ValaszB;
+            }
+            else if (ValaszC.IsChecked == true)
+            {
+                kerdes.UserValasz = kerdes.ValaszC;
+            }
+            else
+            {
+                MessageBox.Show("Kérjük, válasszon egy választ!");
+                return;
+            }
+
+            MessageBox.Show("Válasz rögzítve!");
+        }
     }
 }
